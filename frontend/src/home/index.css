@@ -1,0 +1,9 @@
+
+.main-container{
+    background-color: white;
+    height: 100vh;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+}
+
