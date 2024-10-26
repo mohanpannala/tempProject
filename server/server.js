@@ -6,23 +6,34 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 dotenv.config();
+
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors(
-    {
-        origin: "*",
-        method : ['POST','GET'],
-        credentials: true
-
-    }
-));
+app.use(cors({
+    origin: "*",
+    methods: ['POST', 'GET'],
+    credentials: true
+}));
 app.use(express.json());
 
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB connected successfully"))
-    .catch((error) => console.error("Error connecting to MongoDB", error));
+// MongoDB connection (optimized for serverless)
+let isConnected;
+
+const connectDB = async () => {
+    if (isConnected) return;
+    try {
+        await mongoose.connect(process.env.MONGO_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        });
+        isConnected = mongoose.connection.readyState;
+        console.log("MongoDB connected successfully");
+    } catch (error) {
+        console.error("Error connecting to MongoDB", error);
+    }
+};
+connectDB(); // Initialize connection when server starts
 
 // User schema and model
 const userSchema = new mongoose.Schema({
@@ -35,6 +46,8 @@ const User = mongoose.model('User', userSchema);
 
 // Registration route
 app.post('/register', async (req, res) => {
+    await connectDB(); // Ensure DB connection
+
     const { username, email, password, conformPassword } = req.body;
 
     if (password !== conformPassword) {
@@ -60,6 +73,8 @@ app.post('/register', async (req, res) => {
 
 // Login route
 app.post('/login', async (req, res) => {
+    await connectDB(); // Ensure DB connection
+
     const { username, password } = req.body;
 
     try {
@@ -81,7 +96,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// app.listen(port, () => {
-//     console.log(`Server running on port ${port}`);
-// });
-app.listen()
+// Starting the server
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
