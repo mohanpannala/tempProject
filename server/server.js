@@ -44,6 +44,16 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// Default route
+app.get('/', (req, res) => {
+    res.send('Server is running.');
+});
+
+// Favicon route
+app.get('/favicon.ico', (req, res) => {
+    res.status(204); // No content for favicon request
+});
+
 // Registration route
 app.post('/register', async (req, res) => {
     await connectDB(); // Ensure DB connection
